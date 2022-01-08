@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>学生界面</title>
+<meta name="description" content="这是学生主页">
+<meta name="keywords" content="index">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="renderer" content="webkit">
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<link rel="icon" type="image/png" href="../img/lysf.ico">
+<link rel="stylesheet" href="../amazeui/css/amazeui.min.css" />
+<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+
+<body style="margin-left: 10px;overflow:hidden;" >
+
+	<div id="ref_page" class="am-g" style="height: 850px;">
+	
+			<div class="tpl-content-page-title" style="margin-bottom: 10px;">
+				课题列表</div>
+			<ol class="am-breadcrumb">
+				<li><a href="schoose.html" class="am-icon-users">教师</a></li>
+				<li class="am-active">课题</li>
+			</ol>
+		
+			<div class="am-u-sm-12 am-panel am-panel-default am-scrollable-horizontal">
+	          <form class="am-form" style="margin-top: 30px;">
+	            <table class="am-table am-table-striped am-table-hover table-main am-text-nowrap am-table-centered">
+	              <thead>
+	              <tr>
+	                <th>课题名</th><th>课题描述</th><th>课题来源</th><th>教师姓名</th><th>电话</th><th>操作</th>
+	              </tr>
+	              </thead>
+	              <tbody>
+	              </tbody>
+	            </table>
+	          </form>
+	        </div>
+	</div>
+	
+
+<script src="../js/jquery.min.js"></script>
+<script src="../amazeui/js/amazeui.min.js"></script>
+<script type="text/javascript">
+		$(function() {
+			
+			//正则获得url参数
+			function getQueryString(name) { 
+				var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
+				var r = window.location.search.substr(1).match(reg); 
+				if (r != null) return unescape(r[2]); return null; 
+			} 
+			var teacherId=getQueryString("teacherId");
+			$.get('/graduation/projectController/getProjectListByTeacherId',{
+				teacherId:teacherId,
+				pageNum:1,
+				pageSize:8
+			},function(data){
+
+				for(var i=0;i<data.list.length;i++){
+					var tr=$('<tr>').css('height','60px').append($('<td>').addClass('am-text-middle').append($('<a>').attr('href','javascript:;').text(data.list[i].projectName)));
+	              	/*  var textarea=$('<textarea>').attr('disabled','disabled').css('height','40px').text(data.list[i].projectDescribe);
+ 	              	tr.append($('<td>').addClass('am-text-middle').append(textarea)); */
+        			var textarea=data.list[i].projectDescribe;
+        			var textareaBtn=$('<button>').attr({'type':'button'}).addClass('am-btn am-btn-default').text('点击查看详情')
+        							.append($('<input>').attr('type','hidden').val(textarea));
+					tr.append($('<td>').addClass('am-text-middle').append(textareaBtn));
+					textareaBtn.click(function(){
+						var content=$(this).find('input:hidden').val();
+						if(content.trim()==''){
+							content='没有填写';
+						}
+					 	$(this).popover({
+						    content: content
+						  });  
+					}); 
+	              	tr.append($('<td>').addClass('am-text-middle').text(data.list[i].projectFrom.projectFromName));
+	              	tr.append($('<td>').addClass('am-text-middle').text(data.list[i].teacher.user.userName));
+	              	tr.append($('<td>').addClass('am-text-middle').text(data.list[i].teacher.user.userTel));
+	              	tr.append($('<input>').addClass('studentId').attr('type','hidden').val(data.list[i].studentId));
+	              	var button=$('<button>').attr('type','button')
+	              				.addClass('am-btn am-btn-primary am-btn-sm project_button')
+	              				.append($('<span>').addClass('am-icon-plus').append(' 选择'))
+	              	var studentId=data.list[i].studentId;
+					if(studentId!=null&&studentId!=''){
+						$.ajax({
+							   url: "/graduation/studentController/getUserByStudentId?studentId="+studentId,
+							   type:'get',
+							   async:false,
+							   success: function(data){
+			              		   var src=data.userPortrait;
+			              			if(src==null||src==''){
+			              				src='../img/user01.png';
+			              			}
+					              	var img=$('<img>').attr('src',src).attr('title',data.userName).addClass('project_choose_img');
+					              	var td=$('<td>').addClass('am-text-middle').append(img);
+						            tr.append(td);
+							   }
+							 });
+	              	}else{
+		              	var td=$('<td>').addClass('am-text-middle').append(button).append($('<input>').addClass('projectId').attr('type','hidden').val(data.list[i].projectId));
+		              	tr.append(td);
+	              	}
+	              	$('tbody').append(tr);
+	              	
+              }
+				
+                //点击选择按钮,出现头像
+				$('.project_button').on('click',function() {
+					
+ 					var parent=$(this).parent('td').last();
+					var projectId=parent.find('input').val();
+					parent.empty();
+					var src= $(window.parent.document).find('#userPortrait').attr('src');
+					if(src==''||src==null){
+						src='../img/user01.png';
+					}
+					parent.append($('<img>').attr('src',src).attr('title',$(window.parent.document).find('#loginName').text()).addClass('project_choose_img'));
+					
+					//去写数据库
+					if(projectId!=undefined){
+						$.post('/graduation/studentController/updateProjectByStudentId/'+projectId,{
+							'_method':'put'
+						},function(data){
+							if(data){
+								$.post('/graduation/studentController/updateTeacherId',{
+									teacherId:teacherId
+								},function(data){});
+							}
+						});
+					}
+					
+					//不允许再点击其他课题
+					del_projectBtn(); 
+				});
+				
+				student_project();
+				
+			});
+			
+			
+			//查询数据库该学生是否已经选课
+			function student_project(){
+				$.get('/graduation/studentController/hasChooseProject',function(data){
+					if(data.studentId!=null){
+						$('input:hidden').each(function(index,value){
+							var value=$(this).val();
+							if(value==''||value==null){
+								//清除按钮
+								del_projectBtn();
+							}
+							if(value==data.studentId){
+								//清除按钮
+								del_projectBtn();
+							}
+						});
+					}
+				},'json');
+			}
+			
+			function del_projectBtn(){
+				$('.project_button').each(function() {
+					$(this).parent().empty();
+				});
+			}
+
+		});
+</script>
+</body>
+
+</html>

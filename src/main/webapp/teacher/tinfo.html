@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>教师界面</title>
+<meta name="description" content="这是教师主页">
+<meta name="keywords" content="index">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="renderer" content="webkit">
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<link rel="icon" type="image/png" href="../img/lysf.ico">
+<link rel="stylesheet" href="../amazeui/css/amazeui.min.css" />
+<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+
+<body style="margin-left: 10px; overflow: hidden;">
+
+	<div id="ref_page" class="am-g" style="height: 300px;">
+	
+	    <div class="tpl-content-page-title" style="margin-bottom: 10px;">教师分组信息</div>
+		<div class="am-panel am-panel-default">
+			<div class="am-panel-bd am-scrollable-horizontal">
+				
+				<div class="am-u-sm-12">
+                      <table class="am-table am-table-centered table-main">
+                          <thead>
+                              <tr>
+                                  <th class="table-title">姓名</th>
+                                  <th>所在验收/答辩组</th>
+                                  <th>是否为验收/答辩组组长</th>
+                              </tr>
+                          </thead>
+                          <tbody id="tinfo"></tbody>
+                      </table>
+                  </div>
+			</div>
+		</div>
+	</div>
+
+	<script src="../js/jquery.min.js"></script>
+	<script src="../amazeui/js/amazeui.min.js"></script>
+	<script type="text/javascript">
+		$(function() {
+			$.get('/graduation/teacherController/getTeacherYansouInfo',function(data){
+				$(data.yansouTeachers).each(function(index,value){
+					var td1=$('<td>').addClass('am-text-middle').append($('<span>').text(value.teacher.user.userName));
+					var td2=$('<td>').addClass('am-text-middle').append($('<span>').text(data.yansouTeamName));
+					var is_leader;
+					if(value.isLeader==1){
+						is_leader='是';
+					}else{
+						is_leader='否';
+					}
+					var td3=$('<td>').addClass('am-text-middle').append($('<span>').text(is_leader));
+					$('#tinfo').append($('<tr>').append(td1).append(td2).append(td3));
+				});
+			}); 
+		});
+	</script>
+</body>
+
+</html>

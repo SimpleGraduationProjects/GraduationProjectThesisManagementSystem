@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>学生界面</title>
+<meta name="description" content="这是学生主页">
+<meta name="keywords" content="index">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="renderer" content="webkit">
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<link rel="icon" type="image/png" href="../img/lysf.ico">
+<link rel="stylesheet" href="../amazeui/css/amazeui.min.css" />
+<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+
+<body style="margin-left: 10px;overflow:hidden;" >
+
+	<div id="ref_page" class="am-g">
+	
+		<div class="tpl-content-page-title" style="margin-bottom: 10px;">填写中期检查反馈表</div>
+
+		<div class="am-panel am-panel-default">
+			<div class="am-panel-bd">
+				<div style="height: 650px;">
+						<table class="am-table am-table-bordered  am-table-centered am-table-compact">
+							<thead>
+								<tr>
+									<th colspan="6" class="am-text-middle">洛阳师范学院本科毕业论文（设计）中期检查</th>
+								</tr>
+								<tr id="tr1">
+										<td>院(系)：</td>
+										<td>信息技术学院</td>
+										<td>专业：</td>
+										<td class="am-text-left"></td>
+										<td>年级:</td>
+										<td></td>
+								</tr>
+							</thead>
+						 	<tbody>
+								<tr id="tr2">
+									<td class="am-text-middle" colspan="2">题目</td>
+									<td colspan="4"></td>
+								</tr>
+								<tr id="tr3">
+									<td>学号</td>
+									<td colspan="2"></td>
+									<td>姓名</td>
+									<td colspan="2"></td>
+								</tr>
+								<tr id="tr4">
+									<td>指导老师</td>
+									<td colspan="2"></td>
+									<td>职称</td>
+									<td colspan="2"></td>
+								</tr>
+								<tr>
+									<td colspan="6">
+										<textarea id="column1" style="width: 100%; height: 200px;" placeholder="已经完成的内容："></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="6">
+										<textarea id="column2" style="width: 100%; height: 200px;" placeholder="未完成内容及原因："></textarea>
+									</td>
+								</tr>
+							</tbody> 
+						</table>
+						<button id="zqjc_btn" type="button" class="am-btn am-btn-primary am-radius am-fr"
+							data-am-loading="{spinner: 'circle-o-notch', loadingText: '提交中...', resetText: '提交完成'}">
+							提交</button>
+				</div>
+			</div>
+		</div>
+				  
+	</div>
+
+<script src="../js/jquery.min.js"></script>
+<script src="../amazeui/js/amazeui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript">
+	$(function() {
+		 
+		$.ajax({
+			   url: "/graduation/studentController/getStuAndProjectAndTeacher",
+			   type: 'get',
+			   dataType:'json',
+			   async:false,
+			   success: function(data){
+				   if(!isNull(data.studentId)){
+					$('#tr1').find('td').eq(3).text(data.classInfo.subject.subjectName);
+					$('#tr1').find('td').eq(5).text(data.classInfo.grade.gradeName);
+					$('#tr2').find('td').eq(1).text(data.project.projectName);
+					$('#tr3').find('td').eq(1).text(data.user.userAccount);
+					$('#tr3').find('td').eq(3).text(data.user.userName);
+					$('#tr4').find('td').eq(1).text(data.teacher.user.userName);
+					$('#tr4').find('td').eq(3).text(data.teacher.zhicheng);
+					$('#zqjc_btn').append($('<input>').attr({'type':'hidden','name':'studentId'}).val(data.studentId));
+					beforeZqjc(data.studentId);
+				   }else{
+					   	$('#zqjc_btn').addClass('am-disabled').text('请先选择课题');
+						$('#column1').attr('disabled','disabled');
+						$('#column2').attr('disabled','disabled');
+				   }
+			   }
+			 });
+		
+		//中期检查之前需完成开题报告
+		function beforeZqjc(studentId) {
+			if(!isNull(studentId)&&studentId!='undefined'){
+				 $.ajax({
+					   url: "/graduation/ktbgController/getKtbgByStudentId",
+					   type: 'get',
+					   dataType:'json',
+					   data:{
+						   studentId:studentId
+					   },
+					   async:false,
+					   success: function(data){
+						   if(data.ktbgStatus==0||data.ktbgStatus==null){
+							   	$('#column1').attr('disabled','disabled');
+								$('#column2').attr('disabled','disabled');
+								$('#zqjc_btn').addClass('am-disabled').text('请先完成开题报告');
+							}else{
+								disBtn(data.studentId);
+							}
+					   }
+					 });
+			}
+		}
+		
+		//查询数据库是否应该禁用提交按钮
+		function disBtn(studentId) {
+			if(!isNull(studentId)&&studentId!='undefined'){
+				$.ajax({
+					   url: "/graduation/zqjcController/getzqjcByStudentId",
+					   type: 'get',
+					   data:{
+						   studentId:studentId
+					   },
+					   dataType:'json',
+					   async:false,
+					   success: function(data){
+						   if(!isNull(data.column3)){
+								$('#zqjc_btn').addClass('am-disabled').text('已审核');
+								$('#column1').attr('disabled','disabled').text(data.column1);
+								$('#column2').attr('disabled','disabled').text(data.column2);
+							}else if(!isNull(data.zqjcId)){
+								$('#zqjc_btn').text('更新');
+								$('#column1').text(data.column1);
+								$('#column2').text(data.column2);
+								$('#zqjc_btn').append($('<input>').attr({'type':'hidden','name':'studentId'}).val(data.studentId));
+								$('#zqjc_btn').append($('<input>').attr({'type':'hidden','name':'zqjcId'}).val(data.zqjcId));
+							}
+					   },
+					 }); 
+			}
+		}
+		
+		//提交中期检查
+		$('#zqjc_btn').click(function () {
+		    var $btn = $(this);
+		    var studentId=$btn.find('input:hidden[name=studentId]').val();
+		    var zqjcId=$btn.find('input:hidden[name=zqjcId]').val();
+			var column1=$('#column1').val();
+			var column2=$('#column2').val();
+			if(isNull(column1)||isNull(column2)||isNull(studentId)){
+				return;
+			}
+			  $.post('/graduation/zqjcController/insertSelective',{
+				  zqjcId:zqjcId,
+				  studentId:studentId,
+				  column1:column1,
+				  column2:column2
+			  },function(data){
+				  if(data){
+					  $btn.button('loading');
+					    setTimeout(function(){
+					    	disableBtn('zqjc_btn','完成');
+					  }, 3000);
+				  }
+			  });
+			    
+		});
+		
+	});
+</script>
+</body>
+
+</html>

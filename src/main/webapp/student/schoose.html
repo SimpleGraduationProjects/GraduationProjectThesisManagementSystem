@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>学生界面</title>
+<meta name="description" content="这是学生主页">
+<meta name="keywords" content="index">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="renderer" content="webkit">
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<link rel="icon" type="image/png" href="../img/lysf.ico">
+<link rel="stylesheet" href="../amazeui/css/amazeui.min.css" />
+<link rel="stylesheet" href="../css/pagination.css">
+<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+
+<body style="overflow:hidden;" >
+
+	<div id="ref_page" style="height: 500px;">
+	    <div class="teacher_search_title am-panel am-panel-default">
+		    <div class="am-panel-bd">
+				<div class="am-cf">
+				  <div class=" am-fl"><span class="tpl-content-page-title">教师列表</span></div>
+				  <div class="am-fr" style="width: 180px;">
+				    <div class="am-input-group am-input-group-sm">
+				      <input id="searchInput" type="text" class="am-form-field" placeholder="根据教师姓名搜索">
+				      <span class="am-input-group-btn" style="width: 30%;">
+				        <button id="searchTeacher" class="am-btn am-btn-default" type="button">搜索</button>
+				      </span>
+				    </div>  
+				  </div>
+				</div>
+		    </div>
+		</div>
+		<div class="teacher_search_title am-panel am-panel-default">
+			<div class="am-panel am-panel-default">
+				<div class="am-panel-bd am-scrollable-horizontal">
+	                    <table class="am-table am-table-centered am-table-striped am-table-hover">
+	                        <thead>
+	                            <tr>
+	                                <th>姓名</th>
+	                                <th>教学方向</th>
+	                                <th>性别</th>
+	                                <th>联系方式</th>
+	                                <th>科室</th>
+	                                <th>剩余课题数</th>
+	                                <th>操作</th>
+	                            </tr>
+	                        </thead>
+	                        <tbody id="chooseBody"></tbody>
+	                    </table>
+	                </div>
+	                <footer class="am-panel-footer" style="height: 50px;">
+						<div class="am-fr">
+						   <div id="news-Pagination-1"></div>
+						</div>
+	                </footer>
+			</div>
+		</div>
+	</div>
+
+<script src="../js/jquery.min.js"></script>
+<script src="../amazeui/js/amazeui.min.js"></script>
+<script src="../js/jquery.pagination.js"></script>
+<script type="text/javascript">
+ 	 	$(function() {
+			
+			function chooseBody(data) {
+				for(var num=0;num<data.list.length;num++){
+					var td1=$('<td>').text(data.list[num].user.userName);
+					var td2=$('<td>').text(data.list[num].teacherDescribe);
+					var td3=$('<td>').text(data.list[num].user.userGender==1?'男':'女');
+					var td4=$('<td>').text(data.list[num].user.userTel);
+					var dept=data.list[num].dept;
+					if(dept!=null){
+						var td5=$('<td>').text(dept.deptName);
+					}else{
+						var td5=$('<td>');
+					}
+					var noChooseProject=data.list[num].noChooseProject;
+					var td6=$('<td>').addClass('noChooseProjectNum').text(noChooseProject);
+					if(noChooseProject>0){
+						var td7=$('<td>').append($('<a>').attr('href','sproject.html?teacherId='+data.list[num].teacherId).text('选择该老师的课题'));
+					}else{
+						var td7=$('<td>').append($('<a>').attr('href','javascript:;').text('选择该老师的课题'));
+					}
+					var tr=$('<tr>').append(td1).append(td2).append(td3).append(td4).append(td5).append(td6).append(td7);
+					$('#chooseBody').append(tr);
+				}
+			}
+			
+			var pageNum=1;
+			var pageSize=8;
+			var j=1;
+			showTeacher(pageNum,pageSize);
+			function showTeacher(pageNum,pageSize) {
+ 				$.get('/graduation/teacherController/getSubTeacher',{
+					pageNum:pageNum,
+					pageSize:pageSize
+				},function(data){
+					//清除之前的数据
+ 					$('#chooseBody').empty();
+					if(data.list.length!=0){
+						chooseBody(data);
+						$('#news-Pagination-1').css('display','');
+						if(j==1){
+							//第一次调用
+							j++;
+							showPage1(data.total,pageSize);
+						}
+					}else{
+						$('#news-Pagination-1').css('display','none');
+					}
+				}); 
+			}
+			
+ 				 function showPage1(total,pageSize){
+ 					//分页
+ 					$('#news-Pagination-1').pagination(total, {      //总记录数
+ 				        items_per_page:pageSize,          //每页显示多少条记录
+ 			  		    next_text:'下一页',
+ 			  		    prev_text:'上一页',
+ 			  		    num_display_entries:5,
+ 			  		  	//num_edge_entries:2,  //连接分页主体的条数
+ 				        callback:handlePaginationClick
+ 				     });
+ 			  
+ 				  }
+ 				function handlePaginationClick(new_page_index, pagination_container) {
+ 					//清除之前的数据
+ 					$('#chooseBody').empty();
+ 					showTeacher(new_page_index+1,pageSize);
+ 					return false;
+ 				}
+				 function showPage2(total,pageSize){
+	 					//分页
+	 					$('#news-Pagination-1').pagination(total, {      //总记录数
+	 				        items_per_page:pageSize,          //每页显示多少条记录
+	 			  		    next_text:'下一页',
+	 			  		    prev_text:'上一页',
+	 			  		    num_display_entries:5,
+	 			  		  	//num_edge_entries:2,  //连接分页主体的条数
+	 				        callback:handlePaginationClick2
+	 				     });
+	 			  
+	 				  }
+	 				function handlePaginationClick2(new_page_index, pagination_container) {
+	 					//清除之前的数据
+	 					$('#chooseBody').empty();
+	 					searchBody(new_page_index+1,pageSize);
+	 					return false;
+	 				}
+ 				
+ 				//查询
+ 				var a=1;
+ 				$('#searchTeacher').click(function() {
+ 					var teacherName=$('#searchInput').val().trim();
+ 					if(teacherName==null||teacherName==''){
+ 						j=1;
+ 						showTeacher(pageNum,pageSize);
+ 						return false;
+ 					}
+ 					searchBody(teacherName,pageNum,pageSize);
+				});
+ 				$(document).keyup(function(event){
+ 					if(event.keyCode ==13){
+ 						var teacherName=$('#searchInput').val().trim();
+ 	 					if(teacherName==null||teacherName==''){
+ 	 						j=1;
+ 	 						showTeacher(pageNum,pageSize);
+ 	 						return false;
+ 	 					}
+ 						searchBody($('#searchInput').val().trim(),pageNum,pageSize);
+ 					}
+ 				});
+ 				function searchBody(teacherName,pageNum,pageSize){
+ 					$.get('/graduation/teacherController/findTeacherByTeacherName',{
+ 						teacherName:teacherName,
+ 						pageNum:pageNum,
+ 						pageSize:pageSize
+ 					},function(data){
+						//清除之前的数据
+	 					$('#chooseBody').empty();
+ 						if(data.list.length!=0){
+		 						chooseBody(data);
+		 						$('#news-Pagination-1').css('display','');
+		 					 if(a==1){
+								//第一次调用
+								a++;
+								showPage2(data.total,pageSize);
+							} 
+ 						}else{
+ 							$('#news-Pagination-1').css('display','none');
+ 						}
+					});
+ 				} 
+
+		});
+</script>
+</body>
+
+</html>

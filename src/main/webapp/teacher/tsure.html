@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>教师界面</title>
+<meta name="description" content="这是教师主页">
+<meta name="keywords" content="index">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="renderer" content="webkit">
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<link rel="icon" type="image/png" href="../img/lysf.ico">
+<link rel="stylesheet" href="../amazeui/css/amazeui.min.css" />
+<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+
+<body style="margin-left: 10px; overflow: hidden;">
+
+	<div id="ref_page" class="am-g">
+	
+	    <div class="tpl-content-page-title" style="margin-bottom: 10px;">确认选题</div>
+		<div class="am-panel am-panel-default">
+			<div class="am-panel-bd am-scrollable-horizontal">
+				
+				<div class="am-u-sm-12">
+                      <table class="am-table am-table-centered am-table-striped am-table-hover table-main">
+                          <thead>
+                              <tr>
+                                  <th>编号</th>
+                                  <th>课题名</th>
+                                  <th>选题学生</th>
+                                  <th>班级</th>
+                                  <th>电话号码</th>
+                                  <th><span style="margin-left: 50%;">操作</span></th>
+                              </tr>
+                          </thead>
+                          <tbody id="tsureBody"></tbody>
+                      </table>
+                </div>
+			</div>
+		</div>
+	</div>
+
+	<script src="../js/jquery.min.js"></script>
+	<script src="../amazeui/js/amazeui.min.js"></script>
+	<script type="text/javascript">
+		$(function() {
+			
+			 $.ajax({
+				   url: "/graduation/teacherController/findTeacherAndProject",
+				   type:'get',
+				   async:false,
+				   success: function(data){
+					   for(var i=0;i<data.projectList.length;i++){
+						   var student=data.projectList[i].student;
+						   var student_id;
+						   if(student!=null){
+							   var td1=$('<td>').addClass('am-text-middle').text((i+1));
+							   var td2=$('<td>').addClass('am-text-middle').text(data.projectList[i].projectName);
+							   var td3=$('<td>').addClass('am-text-middle').text(student.user.userName);
+							   var td4=$('<td>').addClass('am-text-middle').text(student.classInfo.className);
+							   var td5=$('<td>').addClass('am-text-middle').text(student.user.userTel);
+							   student_id=student.studentId;
+							   var btn1=$('<button>').attr('type','button').addClass('am-btn am-btn-default am-btn-xs am-text-secondary yes_btn').append($('<span>').addClass('am-icon-check')).append($('<span>').text(' 确定'));
+							   var btn2=$('<button>').attr('type','button').addClass('am-btn am-btn-default am-btn-xs am-text-danger no_btn').append($('<span>').addClass('am-icon-times')).append($('<span>').text(' 取消'));
+							   var td6=$('<td>').addClass('am-text-middle').append($('<div>').addClass('am-btn-toolbar')
+									   			.append($('<div>').addClass('am-btn-group am-btn-group-xs').css('float','right').append(btn1).append(btn2)));
+							   if(student_id!=null&&student_id!=''){
+								   td6.append($('<input>').addClass('studentId').attr('type','hidden').val(student_id));
+								   student_id='';
+							   }
+							   td6.append($('<input>').addClass('teacherId').attr('type','hidden').val(data.teacherId));
+							   td6.append($('<input>').addClass('projectId').attr('type','hidden').val(data.projectList[i].projectId));
+							   var tr=$('<tr>').append(td1).append(td2).append(td3).append(td4).append(td5).append(td6);
+							   $('#tsureBody').append(tr);
+						   }
+					   }
+				   }
+				 });
+			 
+			 //确定按钮
+			 $('.yes_btn').click(function(){
+				   var btn=$(this);
+				   var sId=btn.parent().parent().parent().find('.studentId').val();
+				   if(sId==null||sId==''){
+					   return;
+				   }
+				  $.post('/graduation/studentController/updateProjectNum',{
+					  "_method":'put',
+					  studentId:sId,
+					  projectId:btn.parent().parent().parent().find('.projectId').val(),
+					  teacherId:btn.parent().parent().parent().find('.teacherId').val()
+				  },function(data){
+					  if(data){
+						  btn.parent().empty();
+					  }
+				  });
+			   });
+			 
+			 //取消按钮
+			   $('.no_btn').click(function(){
+				   var btn=$(this);
+				   var sId=btn.parent().parent().parent().find('.studentId').val();
+				   if(sId==null||sId==''){
+					   return;
+				   }
+				  $.post('/graduation/studentController/updateNoProjectNum',{
+					  "_method":'put',
+					  projectId:btn.parent().parent().parent().find('.projectId').val(),
+					  studentId:sId
+				  },function(data){
+					  if(data){
+						btn.parent().parent().parent().parent().empty();
+					  }
+				  }); 
+			   }); 
+			 
+				//查询已确认学生
+				var stuEle=$('.yes_btn').parent().parent().parent().find('.studentId');
+				stuEle.each(function(index,value){
+					$.get('/graduation/studentController/projectNum',{
+						studentId:$(value).val()
+					},function(data){
+						if(data){
+							$(value).parent().empty();
+						}
+					}); 
+				});
+				
+		});
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>教师界面</title>
+<meta name="description" content="这是教师主页">
+<meta name="keywords" content="index">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="renderer" content="webkit">
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<link rel="icon" type="image/png" href="http://localhost:8080/graduation/img/lysf.ico">
+<link rel="stylesheet" href="http://localhost:8080/graduation/amazeui/css/amazeui.min.css" />
+<link rel="stylesheet" href="http://localhost:8080/graduation/teacher/css/admin.css">
+<link rel="stylesheet" href="http://localhost:8080/graduation/teacher/css/app.css">
+</head>
+
+<body style="margin-left: 10px;overflow:hidden;" >
+
+	<div id="ref_page" class="am-g">
+	
+		<div class="tpl-content-page-title" style="margin-bottom: 10px;">审阅中期检查</div>
+			
+		<ol class="am-breadcrumb">
+			<li><a href="http://localhost:8080/graduation/teacher/tstudentlist.html" class="am-icon-users">学生列表</a></li>
+			<li class="am-active">中期检查</li>
+		</ol>
+		<div class="am-panel am-panel-default">
+			<div class="am-panel-bd">
+				<div style="height: 1060px;">
+						<table class="am-table am-table-bordered  am-table-centered am-table-compact">
+							<thead>
+								<tr>
+									<th colspan="6" class="am-text-middle">洛阳师范学院本科毕业论文（设计）中期检查</th>
+								</tr>
+								<tr id="tr1">
+										<td>院(系)：</td>
+										<td>信息技术学院</td>
+										<td>专业：</td>
+										<td class="am-text-left"></td>
+										<td>年级:</td>
+										<td></td>
+								</tr>
+							</thead>
+						 	<tbody>
+								<tr id="tr2">
+									<td class="am-text-middle" colspan="2">题目</td>
+									<td colspan="4"></td>
+								</tr>
+								<tr id="tr3">
+									<td>学号</td>
+									<td colspan="2"></td>
+									<td>姓名</td>
+									<td colspan="2"></td>
+								</tr>
+								<tr id="tr4">
+									<td>指导老师</td>
+									<td colspan="2"></td>
+									<td>职称</td>
+									<td colspan="2"></td>
+								</tr>
+								<tr>
+									<td colspan="6" class="am-text-left">
+										<textarea id="column1" style="width: 100%; height: 200px;" placeholder="已经完成的内容：" disabled="disabled"></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="6" class="am-text-left">
+										<textarea id="column2" style="width: 100%; height: 200px;" placeholder="未完成内容及原因：" disabled="disabled"></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="6">
+										<textarea id="column3" style="width: 100%; height: 200px;" placeholder="指导教师意见："></textarea>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="6">
+										<textarea id="column4" style="width: 100%; height: 200px;" placeholder="备注："></textarea>
+									</td>
+								</tr>
+							</tbody> 
+						</table>
+						<button id="zqjc_btn" type="button" class="am-btn am-btn-primary am-radius am-fr"
+							data-am-loading="{spinner: 'circle-o-notch', loadingText: '提交中...', resetText: '完成'}">
+							提交</button>
+				</div>
+			</div>
+		</div>
+				  
+	</div>
+
+<script src="http://localhost:8080/graduation/js/jquery.min.js"></script>
+<script src="http://localhost:8080/graduation/amazeui/js/amazeui.min.js"></script>
+<script src="http://localhost:8080/graduation/teacher/js/app.js"></script>
+<script type="text/javascript">
+	$(function() {
+		
+		var studentId=getQueryString("studentId");
+		
+		$.ajax({
+			   url: "/graduation/studentController/getStudentAndZqjcBySid",
+			   type: 'get',
+			   dataType:'json',
+			   async:false,
+			   data:{
+				   studentId:studentId
+			   },
+			   success: function(data){
+				   if(!isNull(data.zqjc)){
+					$('#tr1').find('td').eq(3).text(data.classInfo.subject.subjectName);
+					$('#tr1').find('td').eq(5).text(data.classInfo.grade.gradeName);
+					$('#tr2').find('td').eq(1).text(data.project.projectName);
+					$('#tr3').find('td').eq(1).text(data.user.userAccount);
+					$('#tr3').find('td').eq(3).text(data.user.userName);
+					$('#tr4').find('td').eq(1).text(data.teacher.user.userName);
+					$('#tr4').find('td').eq(3).text(data.teacher.zhicheng);
+					$('#column1').text(data.zqjc.column1);
+					$('#column2').text(data.zqjc.column2);
+					if(!isNull(data.zqjc.column3)&&!isNull(data.zqjc.column4)){
+						 $('#column3').text(data.zqjc.column3);
+						 $('#column4').text(data.zqjc.column4);
+						 $('#zqjc_btn').text('更新');
+					   }
+					$('#zqjc_btn').append($('<input>').attr('type','hidden').val(data.zqjc.zqjcId));
+				   }else{
+					   $('#column3').attr('disabled','disabled');
+					   $('#column4').attr('disabled','disabled');
+					   $('#zqjc_btn').attr('disabled','disabled').text('该学生没有填写中期检查');
+				   }
+			   }
+			 });
+		
+		//提交中期检查
+		$('#zqjc_btn').click(function () {
+			  var $btn = $(this);
+			  var zqjcId=$btn.find('input:hidden').val();
+			  if(isNull(zqjcId)){
+				  return;
+			  }
+			  $.post('/graduation/zqjcController/updateByPrimaryKeySelective',{
+				  '_method':'put',
+				  zqjcId:zqjcId,
+				  column3:$('#column3').val(),
+				  column4:$('#column4').val(),
+			  },function(data){
+				  if(data){
+					  $btn.button('loading');
+					    setTimeout(function(){
+					    	disableBtn('zqjc_btn','完成');
+					  }, 3000);
+				  }
+			  });
+		});
+		
+	});
+</script>
+</body>
+
+</html>
