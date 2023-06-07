@@ -17,27 +17,22 @@ import freemarker.template.Template;
 
 public class WordUtils {  
     //配置信息,代码本身写的还是很可读的,就不过多注解了  
-    private static Configuration configuration = null;  
-    //这里注意的是利用WordUtils的类加载器动态获得模板文件的位置  
-    private static final String templateFolder =  WordUtils.class.getClassLoader().getResource("../").getPath()+"/templete/";  
-    static {  
-        configuration = new Configuration();  
-        configuration.setDefaultEncoding("utf-8");  
-        try {
-            configuration.setDirectoryForTemplateLoading(new File(templateFolder));  
-        } catch (IOException e) {  
-            e.printStackTrace();  
-        }  
-   }  
-  
-    private WordUtils() {
-        throw new AssertionError();  
-    }  
+
+    //这里注意的是利用WordUtils的类加载器动态获得模板文件的位置
   
     public static void exportMillCertificateWord(HttpServletRequest request, HttpServletResponse response,
     		Map map, String templeteName, String fileName) throws IOException {  
-        //Template freemarkerTemplate = configuration.getTemplate("开题报告.ftl");  
-        Template freemarkerTemplate = configuration.getTemplate(templeteName);  
+        //Template freemarkerTemplate = configuration.getTemplate("开题报告.ftl");
+        Configuration  configuration = new Configuration();
+        configuration.setDefaultEncoding("utf-8");
+
+        String ss=request.getSession().getServletContext().getRealPath("/WEB-INF/templete/");
+        try {
+            configuration.setDirectoryForTemplateLoading(new File(ss));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Template freemarkerTemplate = configuration.getTemplate(templeteName);
         File file = null;  
         InputStream fin = null;  
         ServletOutputStream out = null;  
